@@ -35,8 +35,8 @@
     <?php if ( is_singular() ) wp_enqueue_script( 'comment-reply' ); ?>
     
     <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"></script>
-	<script type="text/javascript" src="<?php echo get_template_directory_uri(); ?>/js/jquery.autopager-1.0.0.js"></script>
-	<script type="text/javascript">$(function() {$.autopager();});</script>
+	<!-- <script type="text/javascript" src="<?php // echo get_template_directory_uri(); ?>/js/jquery.autopager-1.0.0.js"></script> -->
+	<!-- <script type="text/javascript">$(function() {$.autopager();});</script> -->
 	<script src="<?php echo get_template_directory_uri(); ?>/js/jquery.infinitescroll.js"></script>
 	
 

@@ -1,14 +1,12 @@
 <?php
 
 /*
-
-@todo add, delete, run, etc
-
+@todo add-event
 */
 
 class Crontrol_Command extends WP_CLI_Command {
 
-	public $crontrol = null;
+	protected $crontrol = null;
 
 	public function __construct() {
 
@@ -46,6 +44,68 @@ class Crontrol_Command extends WP_CLI_Command {
 	}
 
 	/**
+	 * Run the next scheduled cron event for the given hook.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @synopsis <hook>
+	 * @subcommand run-event
+	 */
+	public function run_event( $args, $assoc_args ) {
+
+		$hook   = $args[0];
+        $result = false;
+		$events = $this->crontrol->get_cron_events();
+
+        if ( is_wp_error( $events ) )
+			WP_CLI::error( $events );
+
+        foreach ( $events as $id => $event ) {
+        	if ( $event->hook == $hook ) {
+        		$result = $this->crontrol->run_cron( $event->hook, $event->sig );
+        		break;
+        	}
+        }
+
+        if ( $result )
+        	WP_CLI::success( sprintf( __( 'Successfully executed the cron event %s', 'crontrol' ), "'" . $hook . "'" ) );
+        else
+        	WP_CLI::error( sprintf( __( 'Failed to the execute the cron event %s', 'crontrol' ), "'" . $hook . "'" ) );
+
+	}
+
+	/**
+	 * Delete the next scheduled cron event for the given hook.
+	 *
+	 * @since 1.2.2
+	 *
+	 * @synopsis <hook>
+	 * @subcommand delete-event
+	 */
+	public function delete_event( $args, $assoc_args ) {
+
+		$hook   = $args[0];
+        $result = false;
+		$events = $this->crontrol->get_cron_events();
+
+        if ( is_wp_error( $events ) )
+			WP_CLI::error( $events );
+
+        foreach ( $events as $id => $event ) {
+        	if ( $event->hook == $hook ) {
+        		$result = $this->crontrol->delete_cron( $event->hook, $event->sig, $event->time );
+        		break;
+        	}
+        }
+
+        if ( $result )
+        	WP_CLI::success( sprintf( __( 'Successfully deleted the cron event %s', 'crontrol' ), "'" . $hook . "'" ) );
+        else
+        	WP_CLI::error( sprintf( __( 'Failed to the delete the cron event %s', 'crontrol' ), "'" . $hook . "'" ) );
+
+	}
+
+	/**
 	 * List available cron schedules.
 	 *
 	 * @since 1.2
@@ -55,10 +115,10 @@ class Crontrol_Command extends WP_CLI_Command {
 	public function list_schedules() {
 
 		$schedules = $this->crontrol->get_schedules();
-
-        $schedules = array_map( array( $this, '_map_schedule' ), $schedules );
+        $schedules = array_map( array( $this, '_map_schedule' ), $schedules, array_keys( $schedules ) );
 
         $fields = array(
+        	'name',
         	'display',
         	'interval'
         );
@@ -79,18 +139,21 @@ class Crontrol_Command extends WP_CLI_Command {
         if ( is_wp_error( $status ) )
 			WP_CLI::error( $status );
 		else
-			WP_CLI::success( __( 'WP-Cron working as expected.', 'control' ) );
+			WP_CLI::success( __( 'WP-Cron is working as expected.', 'crontrol' ) );
 
 	}
 
 	protected function _map_event( $event ) {
-		$event->next_run = strftime("%Y/%m/%d %H:%M:%S", $event->time) . " (".$this->crontrol->time_since(time(), $event->time).")";
-		$event->recurrence = ($event->schedule ? $event->interval.' ('.$this->crontrol->interval($event->interval).')' : __('Non-repeating', 'crontrol'));
+        $time_format = 'Y/m/d H:i:s';
+		$event->next_run = get_date_from_gmt(date('Y-m-d H:i:s',$event->time),$time_format) . " (".$this->crontrol->time_since(time(), $event->time).")";
+		$event->recurrence = ($event->schedule ? $this->crontrol->interval($event->interval) : __('Non-repeating', 'crontrol'));
 		return $event;
 	}
 
-	protected function _map_schedule( $schedule ) {
-		return (object) $schedule;
+	protected function _map_schedule( $schedule, $name ) {
+		$schedule = (object) $schedule;
+		$schedule->name = $name;
+		return $schedule;
 	}
 
 }

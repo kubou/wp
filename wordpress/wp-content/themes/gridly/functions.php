@@ -39,7 +39,8 @@ function dl_image($url, $postid){
 
 	
 	$tempimg = file_get_contents($url);
-	file_put_contents($wp_upload_dir[path].'/'.basename($url),$tempimg);
+	$replacedBaseName = str_replace('%', '_', basename($url));
+	file_put_contents($wp_upload_dir[path].'/'.$replacedBaseName,$tempimg);
 	unset($tempimg);
 	
 	
@@ -68,7 +69,7 @@ function dl_image($url, $postid){
 	
 	
 // 	return WP_CONTENT_DIR.'/uploads/'.basename($url);
-	return $wp_upload_dir[url].'/'.basename($url);
+	return $wp_upload_dir[url].'/'.$replacedBaseName;
 }
 
 
@@ -78,7 +79,7 @@ function dl_image($url, $postid){
 function get_amazon(){
 	
 	$ct = array(
-			'1' => '562020' //WP上のカテゴリID => Amazon上のカテゴリNo
+			'1' => '515206' //WP上のカテゴリID => Amazon上のカテゴリNo
 	);
 	 
 	//ページカウンター
@@ -89,7 +90,10 @@ function get_amazon(){
 		$i = 1;
 		add_option('count',1);
 	}
-	$i = 1;
+	
+	// @todo 開発用：常に１ページ目を取得するように。
+// 	$i = 1;
+
 	foreach($ct as $key=>$val){
 		//Amazonで必要なパラメーター類
 		$param = array(
@@ -98,7 +102,7 @@ function get_amazon(){
 				'Operation' => 'ItemSearch',
 				'AssociateTag' => AF,
 				'ResponseGroup' => 'ItemAttributes,Images,Reviews',
-				'SearchIndex' => 'DVD',
+				'SearchIndex' => 'Books',
 				'BrowseNode' => $val,
 				'Timestamp' => gmdate('Y-m-d\TH:i:s\Z'),
 				'ItemPage' => $i
@@ -121,7 +125,6 @@ function get_amazon(){
 				$actarray[] = (String)$act;
 			}
 			 
-			 
 			//ここで記事として投稿処理を行う
 			//ページスラッグがEANコード（ISBN的なものだと思われる）、タグをキャストとして投稿していますが適宜カスタムフィールドや本文などにしてもいい。
 			$postid = wp_insert_post(array(
@@ -139,6 +142,7 @@ function get_amazon(){
 			$temppost = get_page($postid);
 			if(strpos($temppost->post_name, '-') === true){
 				wp_delete_post($postid);
+				print_r($postid);exit;
 			} else {
 				 
 				//カスタムフィールドの付加
@@ -209,13 +213,13 @@ function cron_add($schedules){
 
 //Cronに上記のget_amazon()を登録する
 //90分単位で動作します。
-add_action('cron_for_amazon', 'get_amazon');
-function my_activation() {
-	if ( !wp_next_scheduled( 'cron_for_amazon' ) ) {
-		wp_schedule_event(time(), '1min', 'cron_for_amazon');
-	}
-}
-add_action('wp', 'my_activation');
+// add_action('cron_for_amazon', 'get_amazon');
+// function my_activation() {
+// 	if ( !wp_next_scheduled( 'cron_for_amazon' ) ) {
+// 		wp_schedule_event(time(), '1min', 'cron_for_amazon');
+// 	}
+// }
+// add_action('wp', 'my_activation');
 
 
 
@@ -334,8 +338,14 @@ function catch_that_image() {
     
 	// Gridly post thumbnails
 	add_theme_support( 'post-thumbnails' );
-		add_image_size('summary-image', 310, 9999);
-		add_image_size('detail-image', 770, 9999);
+// 		add_image_size('summary-image', 310, 9999);
+// 		add_image_size('detail-image', 770, 9999);
+		
+	add_image_size('summary-image', 310, 310, true);
+	add_image_size('detail-image', 770, 770, true);
+	add_image_size('catch-image', 50, 50, true);
+
+		
 	
 	
     // menu 

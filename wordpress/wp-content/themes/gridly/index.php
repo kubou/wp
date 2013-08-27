@@ -1,7 +1,6 @@
 <?php get_header(); ?>
-
 <?php if (have_posts()) : ?>
-<?php get_amazon()?>
+<?php // get_amazon()?>
 <div id="post-area">
 <?php while (have_posts()) : the_post(); ?>	
 

@@ -12,13 +12,12 @@
 
        			<div class="gridly-copy">
                 <h1><?php the_title(); ?></h1>
-                 <p class="gridly-date"> <?php the_time(get_option('date_format')); ?></p>
-           		 <?php the_content(); ?> 
+           		 <?php the_content(); ?>
+           		 
                  <p><?php the_tags(); ?></p>
 
                 
-                <div class="clear"></div>
-				<?php comments_template(); ?> 
+                <div class="clear"></div> 
                 </div>
 
 
@@ -27,6 +26,8 @@
        </div>
        
 		<?php endwhile; endif; ?>
+       
+       <?php //$prevpost = get_adjacent_post(true, '', true); print_r($prevpost);exit;?>
        
        <div class="post-nav">
                <div class="post-prev"><?php previous_post_link('%link'); ?> </div>
