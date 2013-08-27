@@ -4,7 +4,7 @@
    <div id="footer-area">
 			<?php dynamic_sidebar( 'gridly_footer' ); ?>
         </div><!-- // footer area -->   
-<?php }  ?>     
+<?php }  ?>
       
 
 
