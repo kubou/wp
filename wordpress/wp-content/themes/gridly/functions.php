@@ -78,6 +78,8 @@ function dl_image($url, $postid){
 //取得処理はwp_cronで動かしますのでadd_actionは不要です。
 function get_amazon(){
 	
+	print_r('hogehoge');exit;
+	
 	$ct = array(
 			'1' => '515206' //WP上のカテゴリID => Amazon上のカテゴリNo
 	);
@@ -142,7 +144,7 @@ function get_amazon(){
 			$temppost = get_page($postid);
 			if(strpos($temppost->post_name, '-') === true){
 				wp_delete_post($postid);
-				print_r($postid);exit;
+// 				print_r($postid);exit;
 			} else {
 				 
 				//カスタムフィールドの付加
@@ -166,6 +168,8 @@ function get_amazon(){
 					$largeimg = $val2->LargeImage->URL;
 					$largeimg_local = dl_image($largeimg, $postid);
 					
+					$hoge = str_replace('http://wp-test.interworks.jp', '', $largeimg_local);
+					
 					// postidとlargeimg_local（サーバ上のパス）を使ってpost内容のcontentを更新する
 					$contentStr = "<a href='".$largeimg_local."'>";
 					$contentStr2 = '<img class="alignnone size-medium wp-image-' . $postid . '" alt="" src="' . $largeimg_local . '"/>';
@@ -176,8 +180,38 @@ function get_amazon(){
 					$my_post['ID'] = $postid;
 					$my_post['post_content'] = $contentStr;
 					
-					// データベースの投稿情報を更新
+					
+					// データベースの投稿情報を更新（記事画像）
 					wp_update_post( $my_post );
+					
+					// @todo アイキャッチ画像の投稿
+// 					$my_post2 = array();
+// 					$my_post2['post_parent'] = $postid;
+// 					$my_post2['post_type'] = 'attachment';
+// 					$my_post2['guid'] = $largeimg_local;
+// 					$my_post2['post_mime_type'] = 'image/jpeg';
+					
+// // 					wp_update_post( $my_post2 );
+// 					wp_insert_attachment($my_post2);
+					
+					$filename = $hoge;
+					
+					$wp_filetype = wp_check_filetype(basename($filename), null );
+					$wp_upload_dir = wp_upload_dir();
+					$attachment = array(
+							'guid' => $largeimg_local,
+							'post_mime_type' => $wp_filetype['type'],
+							'post_title' => preg_replace('/\.[^.]+$/', '', basename($filename)),
+							'post_content' => '',
+							'post_status' => 'inherit'
+					);
+					$attach_id = wp_insert_attachment( $attachment, $filename, $postid );
+					// you must first include the image.php file
+					// for the function wp_generate_attachment_metadata() to work
+					require_once(ABSPATH . 'wp-admin/includes/image.php');
+					$attach_data = wp_generate_attachment_metadata( $attach_id, $filename );
+					wp_update_attachment_metadata( $attach_id, $attach_data );
+										
 
 				}
 			}
